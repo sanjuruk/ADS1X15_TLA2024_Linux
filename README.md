@@ -1,22 +1,32 @@
-# Adafruit_ADS1015 ![Build Status](https://github.com/adafruit/Adafruit_ADS1X15/workflows/Arduino%20Library%20CI/badge.svg)
+# Driver: ADS1115 ADS1015 TLA2024 
 
-Driver for TI's ADS1X15: 12 and 16-bit Differential or Single-Ended ADC with PGA and Comparator
+Driver for TI's ADS1115(16-bit) ADS1015(12-bit) TLA2024(12-bit) Differential or Single-Ended ADC with PGA and Comparator.
 
-## Info
+## Forked for Linux
+
+This is a modified version of the [Adafruit's ADS1015 library](https://github.com/adafruit/Adafruit_ADS1X15).
+This library can be directly used through the i2c bus of a Single Board Computer using Linux like Raspberry Pi, Orange Pi, pcDuino, Odroid etc.
+
+1) Activate Linux i2c module on your board
+    > raspi-config/armbian-config or other ways. Please review board specifications and Linux distro settings
+2) Confirm the activated i2c device name
+    > ls /dev/i2c*
+3) Use this device in the constructor of the device you are using
+    > TLA2024 tla_sigleEnded("/dev/i2c-0", 0x48);
+   
+4 examples are provided to highlight different uses of the library.
+Example 'multiDeviceOnSameBus' added to show how to use 2 chips on the same bus. Max devices supported on the same bus are 3. Check the datasheet for more information.
+
+## Build
+
+Build the static library and the examples using the 'Makefile'
+Go to the project folder and type <code>make</code>
+
+## Hardware
 
 This family of ADCs provide 4 single-ended or 2 differential channels.
-Each has a programmable gain amplifier from 2/3 up to 16x. Available
-in 12 or 16 bit versions:
+Each has a programmable gain amplifier from 2/3 up to 16x. Available in 12 or 16 bit versions:
 
-* [ADS1015 12-bit ADC](https://www.adafruit.com/product/1083)
-* [ADS1115 16-bit ADC](https://www.adafruit.com/product/1085)
-
-The chip's fairly small so it comes on a breakout board with ferrites to keep the AVDD and AGND quiet. Interfacing is done via I2C. The address can be changed to one of four options (see the datasheet table 5) so you can have up to 4 ADS1x15's connected on a single 2-wire I2C bus for 16 single ended inputs.
-
-Adafruit invests time and resources providing this open source code, please
-support Adafruit and open-source hardware by purchasing products from
-[Adafruit](https://www.adafruit.com)!
-
-## License
-
- BSD license, all text above must be included in any redistribution.
+* [ADS1015 12-bit ADC](http://www.ti.com/lit/ds/symlink/ads1015.pdf)
+* [ADS1115 16-bit ADC](http://www.ti.com/lit/ds/symlink/ads1015.pdf)
+* [TLA2024 12-bit ADC](http://www.ti.com/lit/ds/symlink/tla2024.pdf)
