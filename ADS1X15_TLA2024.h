@@ -44,38 +44,47 @@
     Configs
     -----------------------------------------------------------------------*/
 #define I2CDeviceDefaultName "/dev/i2c-0"
-//#define DEBUG
-/*=========================================================================*/
+#define FailTryCount 10
+    //#define DEBUG
+            /*=========================================================================*/
 
-/*=========================================================================
-    I2C ADDRESS/BITS
-    -----------------------------------------------------------------------*/
+            /*=========================================================================
+                I2C ADDRESS/BITS
+                -----------------------------------------------------------------------*/
 #define I2CADDRESS_1                 (0x48)    // 1001 000 (ADDR = GND)
 #define I2CADDRESS_2                 (0x49)    // 1001 000 (ADDR = VDD)
 #define I2CADDRESS_3                 (0x4B)    // 1001 000 (ADDR = SCL)
-/*=========================================================================*/
+                /*=========================================================================*/
 
-/*=========================================================================
-    CONVERSION DELAY (in uS)
-    -----------------------------------------------------------------------*/
+                /*=========================================================================
+            ADS TYPE
+            -----------------------------------------------------------------------*/
+#define tla2024                         (2)
+#define ads1015                         (1)
+#define ads1115                         (0)
+            /*=========================================================================*/
+
+            /*=========================================================================
+                CONVERSION DELAY (in uS)
+                -----------------------------------------------------------------------*/
 #define TLA2024_CONVERSIONDELAY (1000) ///< Conversion delay
 #define ADS1015_CONVERSIONDELAY (1000) ///< Conversion delay
 #define ADS1115_CONVERSIONDELAY (9000) ///< Conversion delay
-/*=========================================================================*/
+                /*=========================================================================*/
 
-/*=========================================================================
-    POINTER REGISTER
-    -----------------------------------------------------------------------*/
+                /*=========================================================================
+                    POINTER REGISTER
+                    -----------------------------------------------------------------------*/
 #define ADS1015_REG_POINTER_MASK (0x03)      ///< Point mask
 #define ADS1015_REG_POINTER_CONVERT (0x00)   ///< Conversion
 #define ADS1015_REG_POINTER_CONFIG (0x01)    ///< Configuration
 #define ADS1015_REG_POINTER_LOWTHRESH (0x02) ///< Low threshold
 #define ADS1015_REG_POINTER_HITHRESH (0x03)  ///< High threshold
-/*=========================================================================*/
+                    /*=========================================================================*/
 
-/*=========================================================================
-    CONFIG REGISTER
-    -----------------------------------------------------------------------*/
+                    /*=========================================================================
+                        CONFIG REGISTER
+                        -----------------------------------------------------------------------*/
 #define ADS1015_REG_CONFIG_OS_MASK (0x8000) ///< OS Mask
 #define ADS1015_REG_CONFIG_OS_SINGLE                                           \
   (0x8000) ///< Write: Set to start a single-conversion
@@ -121,6 +130,7 @@
   (0x0080) ///< 1600 samples per second (default)
 #define ADS1015_REG_CONFIG_DR_2400SPS (0x00A0) ///< 2400 samples per second
 #define ADS1015_REG_CONFIG_DR_3300SPS (0x00C0) ///< 3300 samples per second
+#define ADS1115_REG_CONFIG_DR_860SPS    (0x00E0)  // 860 samples per second for ADS1115 (3300 for ADS1015)
 
 #define ADS1015_REG_CONFIG_CMODE_MASK (0x0010) ///< CMode Mask
 #define ADS1015_REG_CONFIG_CMODE_TRAD                                          \
@@ -150,17 +160,30 @@
   (0x0003) ///< Disable the comparator and put ALERT/RDY in high state (default)
 
 #define TLA2024_REG_RESERVED (0x0003)  ///< Reserved section must be written 03h
-/*=========================================================================*/
+                        /*=========================================================================*/
 
-/** Gain settings */
+                        /** Gain settings */
 typedef enum {
-  GAIN_TWOTHIRDS = ADS1015_REG_CONFIG_PGA_6_144V,
-  GAIN_ONE = ADS1015_REG_CONFIG_PGA_4_096V,
-  GAIN_TWO = ADS1015_REG_CONFIG_PGA_2_048V,
-  GAIN_FOUR = ADS1015_REG_CONFIG_PGA_1_024V,
-  GAIN_EIGHT = ADS1015_REG_CONFIG_PGA_0_512V,
-  GAIN_SIXTEEN = ADS1015_REG_CONFIG_PGA_0_256V
+    GAIN_TWOTHIRDS = ADS1015_REG_CONFIG_PGA_6_144V,
+    GAIN_ONE = ADS1015_REG_CONFIG_PGA_4_096V,
+    GAIN_TWO = ADS1015_REG_CONFIG_PGA_2_048V,
+    GAIN_FOUR = ADS1015_REG_CONFIG_PGA_1_024V,
+    GAIN_EIGHT = ADS1015_REG_CONFIG_PGA_0_512V,
+    GAIN_SIXTEEN = ADS1015_REG_CONFIG_PGA_0_256V
 } adsGain_t;
+
+/** Sampling settings */
+typedef enum
+{
+    SPS_128 = ADS1015_REG_CONFIG_DR_128SPS,
+    SPS_250 = ADS1015_REG_CONFIG_DR_250SPS,
+    SPS_490 = ADS1015_REG_CONFIG_DR_490SPS,
+    SPS_920 = ADS1015_REG_CONFIG_DR_920SPS,
+    SPS_1600 = ADS1015_REG_CONFIG_DR_1600SPS,
+    SPS_2400 = ADS1015_REG_CONFIG_DR_2400SPS,
+    SPS_3300 = ADS1015_REG_CONFIG_DR_3300SPS,
+    SPS_860 = ADS1115_REG_CONFIG_DR_860SPS
+} adsSps_t;
 
 /**************************************************************************/
 /*!
@@ -175,6 +198,8 @@ protected:
     uint8_t m_conversionDelay; ///< conversion deay
     uint8_t m_bitShift;        ///< bit shift amount
     adsGain_t m_gain;          ///< ADC gain
+    adsSps_t  m_sps;
+    uint8_t   m_adsType;
 
 public:
     TLA2024(const char* i2cDeviceName = I2CDeviceDefaultName, uint8_t i2cAddress = I2CADDRESS_1);
@@ -182,8 +207,12 @@ public:
     int16_t readADC_Differential_0_1(void);
     int16_t readADC_Differential_2_3(void);
     int16_t getLastConversionResults();
+    void updateI2cDevice(const char* i2cDeviceName);
     void setGain(adsGain_t gain);
     adsGain_t getGain(void);
+    void      setSps(adsSps_t sps);
+    adsSps_t  getSps(void);
+    void      setConversionDelay(void);
 
 private:
 };
@@ -195,8 +224,8 @@ private:
 /**************************************************************************/
 class ADS1015 : public TLA2024 {
 public:
-  ADS1015(const char* i2cDeviceName = I2CDeviceDefaultName, uint8_t i2cAddress = I2CADDRESS_1);
-  void startComparator_SingleEnded(uint8_t channel, int16_t threshold);
+    ADS1015(const char* i2cDeviceName = I2CDeviceDefaultName, uint8_t i2cAddress = I2CADDRESS_1);
+    void startComparator_SingleEnded(uint8_t channel, int16_t threshold);
 
 private:
 };
@@ -208,7 +237,7 @@ private:
 /**************************************************************************/
 class ADS1115 : public ADS1015 {
 public:
-  ADS1115(const char* i2cDeviceName = I2CDeviceDefaultName, uint8_t i2cAddress = I2CADDRESS_1);
+    ADS1115(const char* i2cDeviceName = I2CDeviceDefaultName, uint8_t i2cAddress = I2CADDRESS_1);
 
 private:
 };
