@@ -316,6 +316,9 @@ uint16_t TLA2024::readADC_SingleEnded(uint8_t channel) {
 
 	// Wait for the conversion to complete
 	usleep(m_conversionDelay);
+	do {
+		usleep(10);
+	} while (ADS1015_REG_CONFIG_OS_BUSY == (readRegister(m_i2cDeviceName, m_i2cAddress, ADS1015_REG_POINTER_CONFIG) & ADS1015_REG_CONFIG_OS_MASK));
 
 	// Read the conversion results
 	// Shift 12-bit results right 4 bits for the ADS1015
@@ -358,6 +361,9 @@ int16_t TLA2024::readADC_Differential_0_1() {
 
 	// Wait for the conversion to complete
 	usleep(m_conversionDelay);
+	do {
+		usleep(10);
+	} while (ADS1015_REG_CONFIG_OS_BUSY == (readRegister(m_i2cDeviceName, m_i2cAddress, ADS1015_REG_POINTER_CONFIG) & ADS1015_REG_CONFIG_OS_MASK));
 
 	// Read the conversion results
 	uint16_t res = readRegister(m_i2cDeviceName, m_i2cAddress, ADS1015_REG_POINTER_CONVERT) >> m_bitShift;
@@ -412,6 +418,9 @@ int16_t TLA2024::readADC_Differential_2_3() {
 
 	// Wait for the conversion to complete
 	usleep(m_conversionDelay);
+	do {
+		usleep(10);           
+	} while (ADS1015_REG_CONFIG_OS_BUSY == (readRegister(m_i2cDeviceName, m_i2cAddress, ADS1015_REG_POINTER_CONFIG) & ADS1015_REG_CONFIG_OS_MASK));
 
 	// Read the conversion results
 	uint16_t res =
@@ -497,6 +506,9 @@ void ADS1015::startComparator_SingleEnded(uint8_t channel,
 int16_t TLA2024::getLastConversionResults() {
 	// Wait for the conversion to complete
 	usleep(m_conversionDelay);
+	do {
+		usleep(10);
+	} while (ADS1015_REG_CONFIG_OS_BUSY == (readRegister(m_i2cDeviceName, m_i2cAddress, ADS1015_REG_POINTER_CONFIG) & ADS1015_REG_CONFIG_OS_MASK));
 
 	// Read the conversion results
 	uint16_t res =
